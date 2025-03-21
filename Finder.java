@@ -6,13 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 public class Finder {
     static HashMap<String , List<String>> priority_destination= new HashMap<>();
+    static HashMap<String, List<String>> search_results=new HashMap<>();
     static void readConfig() throws FileNotFoundException, IOException{
         if (priority_destination.isEmpty()){
-            InputStreamReader config_data=null;
-            BufferedReader reader=null;
-
-            config_data=new InputStreamReader(new FileInputStream("search_priority_config.txt"));
-            reader= new BufferedReader(config_data);
+            BufferedReader reader=new BufferedReader(new InputStreamReader(new FileInputStream("search_priority_config.txt")));
 
             String line= reader.readLine();
             while(line!=null){
@@ -23,8 +20,23 @@ public class Finder {
                         ArrayList::addAll));
                 line= reader.readLine();
             }
-            config_data.close();
             reader.close();
+        }
+    }
+    static void loadHistory() throws IOException{
+        if(search_results.isEmpty()){
+            BufferedReader reader=new BufferedReader(new InputStreamReader(new FileInputStream("source.txt")));
+
+            String line=reader.readLine();
+            while(line!=null){
+                String[] line_array=line.split(":");
+                search_results.put(line_array[0].strip().toLowerCase(), Arrays.stream(line_array[1].split(",")).collect(
+                        ArrayList::new,
+                        (a, s)-> a.add(s.strip()),
+                        ArrayList::addAll
+                ));
+                line=reader.readLine();
+            }
         }
     }
     public static void main(String args[]){
@@ -32,7 +44,7 @@ public class Finder {
         String home_path=System.getProperty("user.home");
         System.out.println(home_path);
         try{
-            readConfig();
+            loadHistory();
         }
         catch(IOException e){
             System.out.println(e.getMessage());
@@ -40,10 +52,10 @@ public class Finder {
         finally{
             System.out.println("Reading config done.");
         }
-        System.out.print("Which file type would you like to search? ");
+        System.out.print("What file would you like to search for? ");
         String input=scn.nextLine();
-        if(priority_destination.containsKey(input)){
-            System.out.println("PDF: "+priority_destination.get(input.toLowerCase()));
+        if(search_results.containsKey(input)){
+            System.out.println("PDF: "+search_results.get(input.toLowerCase()));
         }else{
             System.out.println("The defined file type is not mentioned in the configuration file.");
         }
